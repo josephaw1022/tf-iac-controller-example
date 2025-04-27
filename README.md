@@ -1,69 +1,76 @@
 # IAC Controller Demo
 
-This project sets up a local GitOps flow using:
-- KinD (Kubernetes in Docker)
-- Flux CD
-- Tofu Controller
-- LocalStack (AWS service emulation)
+This project sets up a local GitOps environment using:
+- **KinD** (Kubernetes in Docker)
+- **Flux CD**
+- **Tofu Controller** (Terraform GitOps Controller)
+- **LocalStack** (AWS Cloud API Mock)
 
 ---
 
 ## 🛠 Prerequisites
 
-- Podman 
-- AWS CLI (`aws`)
-- kubectl (`kubectl`)
-- KinD (`kind`)
-- Make (`make`)
-- Bash shell available (`bash`)
+You need these installed:
 
-✅ Compatible with Linux, MacOS, and Windows (WSL2 or native installations)
+- Podman
+- AWS CLI
+- kubectl
+- KinD
+- Make
+- Bash shell
 
-## 🚀 Quick Start
-
-### 1. Start LocalStack
-
-```bash
-make localstack-up
-```
-
-### 2. Create Kubernetes Cluster
-
-```bash
-make create-cluster
-```
-
-### 3. Install Flux and Tofu Controller
-
-```bash
-make install-flux
-make install-tofu-controller
-```
-
-### 4. Deploy GitOps Resources
-
-```bash
-make apply-flux-tf
-```
+✅ Works on Linux, MacOS, and Windows (WSL2 or native).
 
 ---
 
-## 🔍 Verify
+## 🚀 Quick Start
 
-Use AWS CLI to interact with LocalStack:
+### 1. Bootstrap Full Environment
+
+```bash
+make bootstrap
+```
+
+This will:
+- Create a KinD cluster
+- Install LocalStack
+- Install Flux
+- Install Tofu Controller
+- Apply Terraform GitOps resources
+
+---
+
+## 🔎 Verify Setup
+
+### Step 1: Open a new terminal tab and port-forward LocalStack
+
+```bash
+make localstack-port-forward
+```
+
+_(Leave this running)_
+
+---
+
+### Step 2: In your original terminal tab, check resources
 
 ```bash
 make awscli s3 ls
 ```
 
-> Example: list S3 buckets created by Terraform.
+You should see something like:
+
+```
+2025-04-27 17:05:35 example-tf-iac-bucket
+```
 
 ---
 
 ## 🧹 Cleanup
 
+When you're done:
+
 ```bash
 make delete-flux-tf
 make delete-cluster
-make localstack-down
 ```
