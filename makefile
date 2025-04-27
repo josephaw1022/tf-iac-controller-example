@@ -18,6 +18,13 @@ help: ## Show help for make targets
 
 .DEFAULT_GOAL := help
 
+.PHONY: bootstrap
+bootstrap: ## Create KinD cluster, install Flux, install Tofu Controller, apply Terraform resources
+	@$(MAKE) create-cluster || true
+	@$(MAKE) install-flux
+	@$(MAKE) install-tofu-controller
+	@$(MAKE) apply-flux-tf
+
 ##@ LocalStack
 
 .PHONY: localstack-up
@@ -79,6 +86,19 @@ apply-flux-tf: ## Apply flux-tf-yaml resources
 delete-flux-tf: ## Delete flux-tf-yaml resources
 	kubectl delete -k ./flux-tf-yaml
 
+
+.PHONY: tf-logs
+tf-logs: ## Tail logs of the latest Terraform runner pod
+	@POD=$$(kubectl get pods -n flux-system -l app.kubernetes.io/name=terraform --sort-by=.metadata.creationTimestamp -o jsonpath='{.items[-1:].metadata.name}'); \
+	if [ -z "$$POD" ]; then \
+		echo "❌ No Terraform runner pod found."; \
+		exit 0; \
+	else \
+		echo "📜 Tailing logs from pod: $$POD"; \
+		kubectl logs -f -n flux-system $$POD; \
+	fi
+
+
 ##@ AWS CLI Helpers
 
 .PHONY: aws-env
@@ -99,3 +119,8 @@ awscli: ## Run aws cli against LocalStack (example: make awscli s3 ls)
 	export AWS_SECRET_ACCESS_KEY=test && \
 	export AWS_DEFAULT_REGION=us-east-1 && \
 	aws --endpoint-url=http://localhost:$(LOCALSTACK_PORT) $(filter-out $@,$(MAKECMDGOALS))
+
+
+
+
+
