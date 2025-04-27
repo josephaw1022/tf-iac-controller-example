@@ -1,6 +1,6 @@
 # Variables
 CLUSTER_NAME ?= iac-controller-cluster
-K8S_VERSION ?= kindest/node:v1.28.0
+K8S_VERSION ?= kindest/node:v1.33.0
 FLUX_VERSION ?= v2.5.1
 FLUX_IMAGE ?= fluxcd/flux-cli:$(FLUX_VERSION)-amd64
 
