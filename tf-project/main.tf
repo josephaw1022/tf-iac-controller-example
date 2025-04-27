@@ -21,6 +21,10 @@ provider "aws" {
   access_key = "test"
   secret_key = "test"
   region     = "us-east-1"
+
+  endpoints {
+    s3 = "http://docker.host.internal:4566"
+  }
 }
 
 resource "aws_s3_bucket" "example" {
