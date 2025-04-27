@@ -1,0 +1,10 @@
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: GitRepository
+metadata:
+  name: tf-iac-controller-example
+  namespace: default
+spec:
+  interval: 1m
+  url: https://github.com/josephaw1022/tf-iac-controller-example.git
+  ref:
+    branch: main

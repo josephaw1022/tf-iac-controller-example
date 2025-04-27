@@ -1,0 +1,20 @@
+apiVersion: infra.contrib.fluxcd.io/v1alpha2
+kind: Terraform
+metadata:
+  name: create-s3-bucket
+  namespace: default
+spec:
+  interval: 1m
+  approvePlan: auto
+  path: ./tf-project
+  sourceRef:
+    kind: GitRepository
+    name: tf-iac-controller-example
+    namespace: default
+  runnerPodTemplate:
+    spec:
+      containers:
+      - name: runner
+        envFrom:
+        - configMapRef:
+            name: terraform-env
