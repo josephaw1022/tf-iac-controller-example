@@ -56,8 +56,8 @@ install-flux: ## Install Flux CLI into cluster using Podman
 	@podman run --rm -it \
 		--network host \
 		-v $(HOME)/.kube:/kube:Z \
-		ghcr.io/fluxcd/flux-cli:v2.0.0 \
-		install --kubeconfig=/kube/config
+		ghcr.io/fluxcd/flux-cli:v2.5.0 \
+		install --namespace flux-system --kubeconfig=/kube/config
 
 
 
@@ -95,4 +95,7 @@ aws-env-unset: ## Unset AWS env vars
 
 .PHONY: awscli
 awscli: ## Run aws cli against LocalStack (example: make awscli s3 ls)
-	@aws --endpoint-url=http://localhost:$(LOCALSTACK_PORT) $(filter-out $@,$(MAKECMDGOALS))
+	@export AWS_ACCESS_KEY_ID=test && \
+	export AWS_SECRET_ACCESS_KEY=test && \
+	export AWS_DEFAULT_REGION=us-east-1 && \
+	aws --endpoint-url=http://localhost:$(LOCALSTACK_PORT) $(filter-out $@,$(MAKECMDGOALS))
