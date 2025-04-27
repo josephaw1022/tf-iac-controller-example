@@ -3,8 +3,6 @@ CLUSTER_NAME ?= iac-controller-cluster
 K8S_VERSION ?= kindest/node:v1.33.0
 
 LOCALSTACK_PORT ?= 4566
-PODMAN_SOCKET_PATH ?= /usr/lib/systemd/system/podman.socket
-MOUNT_PODMAN_SOCKET ?= true
 
 ##@ General
 
@@ -21,6 +19,7 @@ help: ## Show help for make targets
 .PHONY: bootstrap
 bootstrap: ## Create KinD cluster, install Flux, install Tofu Controller, apply Terraform resources
 	@$(MAKE) create-cluster || true
+	@$(MAKE) localstack-up || true
 	@$(MAKE) install-flux
 	@$(MAKE) install-tofu-controller
 	@$(MAKE) apply-flux-tf
@@ -29,22 +28,16 @@ bootstrap: ## Create KinD cluster, install Flux, install Tofu Controller, apply 
 
 .PHONY: localstack-up
 localstack-up: ## Start LocalStack container using Podman socket (optional)
-	@if [ "$(MOUNT_PODMAN_SOCKET)" = "true" ]; then \
-		docker run -d --name localstack --replace \
-		-p 127.0.0.1:$(LOCALSTACK_PORT):$(LOCALSTACK_PORT) \
-		-p 127.0.0.1:4510-4559:4510-4559 \
-		-v $(PODMAN_SOCKET_PATH):/var/run/docker.sock \
-		docker.io/localstack/localstack; \
-	else \
-		docker run -d --name localstack --replace \
-		-p 127.0.0.1:$(LOCALSTACK_PORT):$(LOCALSTACK_PORT) \
-		-p 127.0.0.1:4510-4559:4510-4559 \
-		docker.io/localstack/localstack; \
+	@if ! helm repo list | grep -q 'localstack-charts'; then \
+		helm repo add localstack-charts https://localstack.github.io/helm-charts; \
 	fi
-
-.PHONY: localstack-down
-localstack-down: ## Stop and remove LocalStack container
-	docker rm -f localstack
+	@helm repo update
+	@if ! helm list -n localstack | grep -q 'localstack'; then \
+		helm upgrade --install localstack localstack-charts/localstack \
+			--namespace localstack \
+			--create-namespace \
+			--set service.type=ClusterIP; \
+	fi
 
 ##@ Cluster
 
@@ -80,12 +73,15 @@ install-tofu-controller: ## Install Tofu Controller into the cluster
 
 .PHONY: apply-flux-tf
 apply-flux-tf: ## Apply flux-tf-yaml resources
-	kubectl apply -k ./flux-tf-yaml
+	@until kubectl get crd terraforms.infra.contrib.fluxcd.io; do \
+		echo "⏳ Waiting for Terraform CRD to be ready..."; \
+		sleep 5; \
+	done
+	@kubectl apply -k ./flux-tf-yaml
 
 .PHONY: delete-flux-tf
 delete-flux-tf: ## Delete flux-tf-yaml resources
-	kubectl delete -k ./flux-tf-yaml
-
+	@kubectl delete -k ./flux-tf-yaml
 
 .PHONY: tf-logs
 tf-logs: ## Tail logs of the latest Terraform runner pod
