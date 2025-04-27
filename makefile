@@ -25,13 +25,13 @@ help: ## Show help for make targets
 .PHONY: localstack-up
 localstack-up: ## Start LocalStack container using Podman socket (optional)
 	@if [ "$(MOUNT_PODMAN_SOCKET)" = "true" ]; then \
-		docker run -d --name localstack \
+		docker run -d --name localstack --replace \
 		-p 127.0.0.1:$(LOCALSTACK_PORT):$(LOCALSTACK_PORT) \
 		-p 127.0.0.1:4510-4559:4510-4559 \
 		-v $(PODMAN_SOCKET_PATH):/var/run/docker.sock \
 		docker.io/localstack/localstack; \
 	else \
-		docker run -d --name localstack \
+		docker run -d --name localstack --replace \
 		-p 127.0.0.1:$(LOCALSTACK_PORT):$(LOCALSTACK_PORT) \
 		-p 127.0.0.1:4510-4559:4510-4559 \
 		docker.io/localstack/localstack; \
