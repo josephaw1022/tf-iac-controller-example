@@ -1,8 +1,6 @@
 # Variables
 CLUSTER_NAME ?= iac-controller-cluster
 K8S_VERSION ?= kindest/node:v1.33.0
-FLUX_VERSION ?= v2.5.1
-FLUX_IMAGE ?= fluxcd/flux-cli:$(FLUX_VERSION)-amd64
 
 LOCALSTACK_PORT ?= 4566
 PODMAN_SOCKET_PATH ?= /usr/lib/systemd/system/podman.socket
@@ -55,11 +53,15 @@ delete-cluster: ## Delete the KinD cluster
 
 .PHONY: install-flux
 install-flux: ## Install Flux CLI into cluster using Podman
-	podman run --rm -it \
+	@podman run --rm -it \
 		--network host \
-		-v $(HOME)/.kube:/root/.kube:Z \
-		$(FLUX_IMAGE) \
-		flux install
+		-v $(HOME)/.kube:/kube:Z \
+		ghcr.io/fluxcd/flux-cli:v2.0.0 \
+		install --kubeconfig=/kube/config
+
+
+
+
 
 ##@ Tofu Controller
 
