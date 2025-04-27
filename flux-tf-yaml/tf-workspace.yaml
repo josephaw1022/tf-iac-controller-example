@@ -10,6 +10,7 @@ spec:
   sourceRef:
     kind: GitRepository
     name: tf-iac-controller-example
+    namespace: flux-system
   runnerPodTemplate:
     spec:
       envFrom:
