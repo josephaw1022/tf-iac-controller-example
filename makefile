@@ -39,6 +39,11 @@ localstack-up: ## Start LocalStack container using Podman socket (optional)
 			--set service.type=ClusterIP; \
 	fi
 
+.PHONY: localstack-port-forward
+localstack-port-forward: ## Port-forward LocalStack service
+	kubectl port-forward svc/localstack 4566:4566 -n localstack
+
+
 ##@ Cluster
 
 .PHONY: create-cluster
