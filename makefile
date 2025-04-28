@@ -18,8 +18,8 @@ help: ## Show help for make targets
 
 .PHONY: bootstrap
 bootstrap: ## Create KinD cluster, install Flux, install Tofu Controller, apply Terraform resources
-	@$(MAKE) create-cluster || true
-	@$(MAKE) localstack-up || true
+	@$(MAKE) create-cluster
+	@$(MAKE) localstack-up
 	@$(MAKE) install-flux
 	@$(MAKE) install-tofu-controller
 	@$(MAKE) apply-flux-tf
@@ -27,7 +27,7 @@ bootstrap: ## Create KinD cluster, install Flux, install Tofu Controller, apply 
 ##@ LocalStack
 
 .PHONY: localstack-up
-localstack-up: ## Start LocalStack container using Podman socket (optional)
+localstack-up: ## Start LocalStack container using Helm
 	@if ! helm repo list | grep -q 'localstack-charts'; then \
 		helm repo add localstack-charts https://localstack.github.io/helm-charts; \
 	fi
@@ -39,16 +39,17 @@ localstack-up: ## Start LocalStack container using Podman socket (optional)
 			--set service.type=ClusterIP; \
 	fi
 
+
+
 .PHONY: localstack-port-forward
 localstack-port-forward: ## Port-forward LocalStack service
 	kubectl port-forward svc/localstack 4566:4566 -n localstack
 
 
 ##@ Cluster
-
 .PHONY: create-cluster
-create-cluster: ## Create a KinD cluster
-	kind create cluster --name $(CLUSTER_NAME) --image $(K8S_VERSION)
+create-cluster: ## Create a KinD cluster with NodePort mapped to host
+	@kind create cluster --name $(CLUSTER_NAME) --image $(K8S_VERSION) --config=./kind-config.yaml
 
 .PHONY: delete-cluster
 delete-cluster: ## Delete the KinD cluster
@@ -57,8 +58,8 @@ delete-cluster: ## Delete the KinD cluster
 ##@ Flux
 
 .PHONY: install-flux
-install-flux: ## Install Flux CLI into cluster using Podman
-	@podman run --rm -it \
+install-flux: ## Install Flux CLI into cluster
+	@docker run --rm -it \
 		--network host \
 		-v $(HOME)/.kube:/kube:Z \
 		ghcr.io/fluxcd/flux-cli:v2.5.0 \
@@ -102,24 +103,15 @@ tf-logs: ## Tail logs of the latest Terraform runner pod
 
 ##@ AWS CLI Helpers
 
-.PHONY: aws-env
-aws-env: ## Export AWS env vars for LocalStack
-	@export AWS_ACCESS_KEY_ID=test && \
-	export AWS_SECRET_ACCESS_KEY=test && \
-	export AWS_DEFAULT_REGION=us-east-1 && \
-	echo "✅ AWS environment variables set for LocalStack."
-
-.PHONY: aws-env-unset
-aws-env-unset: ## Unset AWS env vars
-	@unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_DEFAULT_REGION && \
-	echo "✅ AWS environment variables unset."
-
 .PHONY: awscli
-awscli: ## Run aws cli against LocalStack (example: make awscli s3 ls)
-	@export AWS_ACCESS_KEY_ID=test && \
-	export AWS_SECRET_ACCESS_KEY=test && \
-	export AWS_DEFAULT_REGION=us-east-1 && \
-	aws --endpoint-url=http://localhost:$(LOCALSTACK_PORT) $(filter-out $@,$(MAKECMDGOALS))
+awscli: ## Run AWS CLI container against LocalStack (example: make awscli s3 ls)
+	@docker run --rm -it \
+		--network=host \
+		-e AWS_ACCESS_KEY_ID=test \
+		-e AWS_SECRET_ACCESS_KEY=test \
+		-e AWS_DEFAULT_REGION=us-east-1 \
+		docker.io/amazon/aws-cli \
+		--endpoint-url=http://localhost:4566 $(filter-out $@,$(MAKECMDGOALS))
 
 
 
