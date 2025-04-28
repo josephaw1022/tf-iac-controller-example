@@ -12,12 +12,11 @@ This project sets up a local GitOps environment using:
 
 You need these installed:
 
-- Podman
-- AWS CLI
+- Podman/docker
 - kubectl
 - KinD
 - Make
-- Bash shell
+
 
 ✅ Works on Linux, MacOS, and Windows (WSL2 or native).
 
@@ -42,17 +41,8 @@ This will:
 
 ## 🔎 Verify Setup
 
-### Step 1: Open a new terminal tab and port-forward LocalStack
 
-```bash
-make localstack-port-forward
-```
-
-_(Leave this running)_
-
----
-
-### Step 2: In your original terminal tab, check resources
+### In your original terminal tab, check resources
 
 ```bash
 make awscli s3 ls
