@@ -6,6 +6,9 @@ LOCALSTACK_PORT ?= 4566
 
 ##@ General
 
+.DEFAULT_GOAL := help
+
+
 # Needed to forward extra args to target
 %:
 	@:
@@ -14,7 +17,6 @@ LOCALSTACK_PORT ?= 4566
 help: ## Show help for make targets
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z0-9_-]+:.*?##/ { printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
-.DEFAULT_GOAL := help
 
 .PHONY: bootstrap
 bootstrap: ## Create KinD cluster, install Flux, install Tofu Controller, apply Terraform resources
