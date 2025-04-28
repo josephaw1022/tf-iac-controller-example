@@ -5,3 +5,4 @@ resources:
   - git-repo.yaml
   - tf-workspace.yaml
   - aws-credentials.yaml
+  - localstack-nodeport.yaml
